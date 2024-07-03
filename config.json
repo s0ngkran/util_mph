@@ -1,0 +1,4 @@
+{
+  "img_dir": "../dataset/images/",
+  "gt_json": "../dataset/gt.json"
+}

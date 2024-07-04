@@ -67,6 +67,7 @@ def main():
     why_fail = []
     correct_list = []
     all_list = []
+    # gt = 8
 
     for dat in mph:
         why_fail.append(dat.pred_tfs)
@@ -74,6 +75,11 @@ def main():
         if dat.can_pred == False: 
             # plot(dat, 'cannot pred', True)
             continue
+        # if dat.gt == gt:
+        #     plot(dat)
+        #     gt+=1
+        #     continue
+
 
         # plot(dat, 'can pred')
         # continue

@@ -3,5 +3,9 @@ echo
 echo "step1..."
 echo
 
-python utils/read_config.py&
+echo
+echo "!!! do not forget to activate your python env"
+echo
+
+python utils/mph_pred.py
 

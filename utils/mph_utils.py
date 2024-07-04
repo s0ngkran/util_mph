@@ -28,6 +28,7 @@ class MPHResult:
     pred_tfs_palm_kps: List
     pred_tfs_pointing_kps: List
     gt_tfs_keypoints: List
+    method: str
     can_pred: bool = False
     is_correct: bool = False
 
@@ -38,7 +39,9 @@ class MPHResult:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return img
 
-    def __init__(self, dat, mph_keypoints, has_gt_keypoints = True):
+    def __init__(self, dat, mph_keypoints, method, has_gt_keypoints = True):
+        assert method in ['ori', 'h1', 'h2']
+        self.method = method
         self.img_path = dat.img_path
         self.gt = dat.gt
         # self.hand_side = dat['hand_side']
@@ -76,9 +79,13 @@ class MPHResult:
         assert len(hand1) == len(hand2) == 21
         
         # swap_hand_method
-        # is_hand1_pointing, is_hand2_pointing = self.rule_based_original(hand1, hand2)
-        is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand1(hand1, hand2)
-        # is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand2(hand1, hand2)
+        if self.method == 'ori':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_original(hand1, hand2)
+        elif self.method == 'h1':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand1(hand1, hand2)
+        elif self.method == 'h2':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand2(hand1, hand2)
+
         if is_hand1_pointing == is_hand2_pointing == True:
             return 'False; two pointing_hand'
         elif is_hand1_pointing == is_hand2_pointing == False:
@@ -152,7 +159,7 @@ def mph_to_gt(pointing_hand, palm_hand):
     assert len(keypoints) == 25, f'len keypoints = {len(keypoints)}'
     return keypoints
 
-def mph_pack():
+def mph_pack(method):
     img_dir = read_config('./config.json')
     data = read_data()
     mph_keypoints = load_mph_result(json_path='mph_keypoints.json')
@@ -161,7 +168,7 @@ def mph_pack():
         key = dat.img_name
         # print('key', key)
         kps = mph_keypoints[key]
-        dat = MPHResult(dat, kps, has_gt_keypoints=False)
+        dat = MPHResult(dat, kps, method, has_gt_keypoints=False)
         pack.append(dat)
     return pack
 

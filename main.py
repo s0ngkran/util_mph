@@ -55,11 +55,14 @@ def plot(dat, text='', raw_pred=False):
     plt.show()
 
 def main():
-    mph = mph_pack()
+    argv = sys.argv
+    method = argv[1]
+    mph = mph_pack(method)
 
     correct = 0
     can_pred = 0
     all = len(mph)
+    print('method =',method)
     print('all mph', all)
     why_fail = []
     correct_list = []

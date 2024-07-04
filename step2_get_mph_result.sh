@@ -7,4 +7,6 @@ echo
 echo "!!! do not forget to activate your python env"
 echo
 
-python main.py > mph_result.sh 
+python main.py ori > mph_result.sh 
+python main.py h1 >> mph_result.sh 
+python main.py h2 >> mph_result.sh 

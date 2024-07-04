@@ -1,4 +1,3 @@
 {
-  "img_dir": "../dataset/images/",
-  "gt_json": "../dataset/gt.json"
+  "img_dir": "../data_zip/poh_vr_1k/images/"
 }

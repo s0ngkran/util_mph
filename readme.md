@@ -1,28 +1,25 @@
 # to get result of MPH
-run two steps
-- step1_get_mph_keypoints.sh
-- step2_get_mph_result.sh
 
-## config
-you can config.json
+## steps to run
+1. edit config.json to have the correct img_dir
+2. edit read_data() 
+3. run step1_get_mph_keypoints.sh
+4. run step2_get_mph_result.sh
+
+## more detail
+
+### config
+
+you have to edit config.json
 working dir is mph_module/*
 ```json
 {
   "img_dir": "../dataset/images/",
-  "gt_json": "../dataset/gt.json"
 }
 ```
+and edit read_data() to return a list of <class MPHInput>
 
-## gt_json
-```json
-{
-  "0": {
-    "img_path": "001.jpg",
-    "gt": 1, 
-  },
-  ...
-}
-```
+### ground truth
 
 gt positions of Thai Finger Spelling
 ```txt
@@ -36,10 +33,9 @@ gt positions of Thai Finger Spelling
      0
 ```
 
+### step1
+output = mph_keypoints.json
 
-## step1
-generate mph_keypoints.json
-
-## step2
-generate mph_result.sh
+### step2
+output = mph_result.sh
 

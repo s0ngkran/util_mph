@@ -5,6 +5,7 @@ from swap_hand import is_pointing_hand
 from tfs import pred, mph_to_tfs
 from read_config import read_config
 from read_data import read_data
+from angle import get_angle
 import os
 try:
     import cv2
@@ -31,6 +32,10 @@ class MPHResult:
     method: str
     can_pred: bool = False
     is_correct: bool = False
+    force_h1_pred: str = ''
+    force_h2_pred: str = ''
+    is_force_h1_correct: bool = False
+    is_force_h2_correct: bool = False
 
     def read_img(self):
         path = self.img_path
@@ -40,7 +45,7 @@ class MPHResult:
         return img
 
     def __init__(self, dat, mph_keypoints, method, has_gt_keypoints = True):
-        assert method in ['ori', 'h1', 'h2']
+        assert method in ['ori', 'h1', 'h2', 'angle']
         self.method = method
         self.img_path = dat.img_path
         self.gt = dat.gt
@@ -63,13 +68,29 @@ class MPHResult:
         if self.n_hand == 2:
             self.can_pred = True
             self.is_correct = self.pred_tfs == self.gt
+            self.do_pred_force(mph_keypoints)
+
+    def do_pred_force(self, mph_keypoints):
+        r = self.do_pred(self.n_hand, mph_keypoints, force='h1')
+        if type(r) == str:
+            r = [], [], r, [], None
+        pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
+        self.force_h1_pred = pred_tfs
+        self.is_force_h1_correct = pred_tfs == self.gt
+
+        r = self.do_pred(self.n_hand, mph_keypoints, force='h2')
+        if type(r) == str:
+            r = [], [], r, [], None
+        pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
+        self.force_h2_pred = pred_tfs
+        self.is_force_h2_correct = pred_tfs == self.gt
 
     def get_n_hand(self, keypoints):
         n = len(keypoints)
         assert n in [0, 21, 42]
         return n // 21
 
-    def do_pred(self, n_hand, keypoints):
+    def do_pred(self, n_hand, keypoints, force=None):
         if n_hand in [0, 1]:
             return 'False; hand!=2'
 
@@ -85,6 +106,16 @@ class MPHResult:
             is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand1(hand1, hand2)
         elif self.method == 'h2':
             is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand2(hand1, hand2)
+        elif self.method == 'angle':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_angle(hand1, hand2)
+
+        if force is not None:
+            assert force in ['h1', 'h2']
+            if force == 'h1':
+                is_hand1_pointing, is_hand2_pointing = self.rule_based_force_h1(hand1, hand2)
+            elif force == 'h2':
+                is_hand1_pointing, is_hand2_pointing = self.rule_based_force_h2(hand1, hand2)
+
 
         if is_hand1_pointing == is_hand2_pointing == True:
             return 'False; two pointing_hand'
@@ -129,6 +160,27 @@ class MPHResult:
             is_hand2_pointing = False
             is_hand1_pointing = True
         return is_hand1_pointing, is_hand2_pointing
+    def rule_based_force_h1(self, hand1, hand2):
+        is_hand1_pointing = True
+        is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+    def rule_based_force_h2(self, hand1, hand2):
+        is_hand1_pointing = False
+        is_hand2_pointing = True
+        return is_hand1_pointing, is_hand2_pointing
+    def rule_based_angle(self, hand1, hand2):
+        # find more angle
+        h1 = get_angle(hand1)
+        h2 = get_angle(hand2)
+        if h1 < h2:
+            # less angle might be palm hand
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
 
     def __str__(self):
         return f'<MPH-{self.key}|gt_{self.gt}|pred_tfs{self.pred_tfs}>'

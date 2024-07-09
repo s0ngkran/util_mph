@@ -67,6 +67,8 @@ def main():
     why_fail = []
     correct_list = []
     all_list = []
+    force_correct_list = []
+    # gt = 8
 
     for dat in mph:
         why_fail.append(dat.pred_tfs)
@@ -74,6 +76,11 @@ def main():
         if dat.can_pred == False: 
             # plot(dat, 'cannot pred', True)
             continue
+        # if dat.gt == gt:
+        #     plot(dat)
+        #     gt+=1
+        #     continue
+
 
         # plot(dat, 'can pred')
         # continue
@@ -82,9 +89,17 @@ def main():
         if dat.is_correct:
             correct += 1
             correct_list.append(dat.pred_tfs)
+        if dat.is_force_h1_correct:
+            force_correct_list.append('fh1')
+        if dat.is_force_h2_correct:
+            force_correct_list.append('fh2')
+
     print(f'{can_pred=} {can_pred/all*100:.2f}%')
     print(f'{correct=} {correct/all*100:.2f}%')
 
+    ff = Counter(force_correct_list)
+    print(f'force method {len(force_correct_list)=} {len(force_correct_list)/all*100:.2f}%')
+    print(f'{ff}')
     print('---')
     w = Counter(why_fail)
     a = Counter(all_list)

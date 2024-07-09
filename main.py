@@ -57,7 +57,8 @@ def plot(dat, text='', raw_pred=False):
 def main():
     argv = sys.argv
     method = argv[1]
-    mph = mph_pack(method)
+    path = argv[2]
+    mph = mph_pack(method, path)
 
     correct = 0
     can_pred = 0

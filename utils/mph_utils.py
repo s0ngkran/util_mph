@@ -211,10 +211,10 @@ def mph_to_gt(pointing_hand, palm_hand):
     assert len(keypoints) == 25, f'len keypoints = {len(keypoints)}'
     return keypoints
 
-def mph_pack(method):
+def mph_pack(method, mph_result_path='mph_keypoints.json'):
     img_dir = read_config('./config.json')
     data = read_data()
-    mph_keypoints = load_mph_result(json_path='mph_keypoints.json')
+    mph_keypoints = load_mph_result(json_path=mph_result_path)
     pack = []
     for dat in data:
         key = dat.img_name

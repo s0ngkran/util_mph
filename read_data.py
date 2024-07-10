@@ -1,7 +1,6 @@
 import json
 from utils.mph_input import MPHInput
 from utils.read_config import read_config
-from collections import Counter
 
 def read_data():
     path = '../data_zip/poh_plain_vs_natural/processed/poh_black_testing.json'

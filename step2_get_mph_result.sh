@@ -7,8 +7,8 @@ echo
 echo "!!! do not forget to activate your python env"
 echo
 
-path=mph_keypoints.json.poh_plain_natural
-out=mph_result.txt.poh_plain_natural
+path=mph_keypoints.json.poh_plain_black
+out=mph_result.txt.poh_plain_black
 
 echo "using $path"
 echo "output $out"

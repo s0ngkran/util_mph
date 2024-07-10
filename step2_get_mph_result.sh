@@ -20,5 +20,6 @@ python main.py angle $path >> $out;
 python main.py angleE $path >> $out;
 python main.py dist $path >> $out;
 python main.py depth $path >> $out;
+python main.py handedness $path >> $out;
 
 echo "writed to ${out}"

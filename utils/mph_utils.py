@@ -1,11 +1,10 @@
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List
 from swap_hand import is_pointing_hand
 from tfs import pred, mph_to_tfs
-from read_config import read_config
 from read_data import read_data
-from angle import get_angle
+from angle import get_angle, get_angle_each, get_dist_pointing
 import os
 try:
     import cv2
@@ -29,6 +28,8 @@ class MPHResult:
     pred_tfs_palm_kps: List
     pred_tfs_pointing_kps: List
     gt_tfs_keypoints: List
+    avg_depths: List
+    handedness: List
     method: str
     can_pred: bool = False
     is_correct: bool = False
@@ -43,10 +44,17 @@ class MPHResult:
         assert img is not None, 'img_path = %s'%path
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return img
+    def avg(self, dat): 
+        s = sum(dat)
+        n = len(dat)
+        if n == 0:
+            return None
+        return s/n
 
-    def __init__(self, dat, mph_keypoints, method, has_gt_keypoints = True):
-        assert method in ['ori', 'h1', 'h2', 'angle']
+    def __init__(self, dat, mph_keypoints, handedness, method, has_gt_keypoints = True):
+        assert method in ['ori', 'h1', 'h2', 'angle', 'angleE', 'dist', 'depth', 'handedness']
         self.method = method
+        self.handedness = handedness
         self.img_path = dat.img_path
         self.gt = dat.gt
         # self.hand_side = dat['hand_side']
@@ -58,10 +66,14 @@ class MPHResult:
         else:
             self.gt_keypoints = []
             self.gt_tfs_keypoints = []
+
+        z = [float(d[2]) for d in mph_keypoints]
+        self.avg_depths = [self.avg(z[:21]), self.avg(z[21:])]
+        mph_keypoints = [(d[0], d[1]) for d in mph_keypoints]
         self.mph_keypoints = mph_keypoints
         self.n_hand = self.get_n_hand(mph_keypoints)
         r = self.do_pred(self.n_hand, mph_keypoints)
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         self.pointing_hand, self.palm_hand, self.pred_tfs, self.pred_tfs_palm_kps, self.pred_tfs_pointing_kps = r
         self.key = dat.img_name
@@ -72,14 +84,14 @@ class MPHResult:
 
     def do_pred_force(self, mph_keypoints):
         r = self.do_pred(self.n_hand, mph_keypoints, force='h1')
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
         self.force_h1_pred = pred_tfs
         self.is_force_h1_correct = pred_tfs == self.gt
 
         r = self.do_pred(self.n_hand, mph_keypoints, force='h2')
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
         self.force_h2_pred = pred_tfs
@@ -108,6 +120,20 @@ class MPHResult:
             is_hand1_pointing, is_hand2_pointing = self.rule_based_on_hand2(hand1, hand2)
         elif self.method == 'angle':
             is_hand1_pointing, is_hand2_pointing = self.rule_based_angle(hand1, hand2)
+        elif self.method == 'angleE':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_angle_each(hand1, hand2)
+        elif self.method == 'dist':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_dist(hand1, hand2)
+        elif self.method == 'depth':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_depth(hand1, hand2)
+        elif self.method == 'handedness':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_handedness(hand1, hand2)
+            if self.handedness[0] == self.handedness[1]:
+                if self.handedness[0] == 'L':
+                    return 'False; two pointing_hand'
+                else:
+                    return 'False; two palm_hand'
+
 
         if force is not None:
             assert force in ['h1', 'h2']
@@ -181,6 +207,58 @@ class MPHResult:
             is_hand2_pointing = False
         return is_hand1_pointing, is_hand2_pointing
 
+    def rule_based_angle_each(self, hand1, hand2):
+        # find more angle
+        h1 = get_angle_each(hand1)
+        h2 = get_angle_each(hand2)
+        if h1 < h2:
+            # less angle might be palm hand
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
+    def rule_based_dist(self, hand1, hand2):
+        # find more angle
+        h1 = get_dist_pointing(hand1)
+        h2 = get_dist_pointing(hand2)
+        if h1 < h2:
+            # less angle might be palm hand
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
+    def rule_based_depth(self, hand1, hand2):
+        # find more angle
+        h1 = self.avg_depths[0]
+        h2 = self.avg_depths[1]
+        if h1 < h2:
+            # less angle might be palm hand
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
+    def rule_based_handedness(self, hand1, hand2):
+        # find more angle
+        h1 = self.handedness[0]
+        # h2 = self.handedness[1]
+        if h1 == 'L':
+            # left hand is palm
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
 
     def __str__(self):
         return f'<MPH-{self.key}|gt_{self.gt}|pred_tfs{self.pred_tfs}>'
@@ -212,15 +290,17 @@ def mph_to_gt(pointing_hand, palm_hand):
     return keypoints
 
 def mph_pack(method, mph_result_path='mph_keypoints.json'):
-    img_dir = read_config('./config.json')
+    # img_dir = read_config('./config.json')
     data = read_data()
     mph_keypoints = load_mph_result(json_path=mph_result_path)
     pack = []
     for dat in data:
         key = dat.img_name
         # print('key', key)
-        kps = mph_keypoints[key]
-        dat = MPHResult(dat, kps, method, has_gt_keypoints=False)
+        m = mph_keypoints[key]
+        kps = m['keypoints']
+        hds = m['handedness']
+        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints=False)
         pack.append(dat)
     return pack
 

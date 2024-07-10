@@ -7,9 +7,19 @@ echo
 echo "!!! do not forget to activate your python env"
 echo
 
-python main.py ori mph_keypoints.json > mph_result.txt;
-python main.py h1 mph_keypoints.json>> mph_result.txt;
-python main.py h2 mph_keypoints.json>> mph_result.txt;
-python main.py angle mph_keypoints.json>> mph_result.txt;
+path=mph_keypoints.json.poh_plain_natural
+out=mph_result.txt.poh_plain_natural
 
-echo 'writed to mph_result.txt'
+echo "using $path"
+echo "output $out"
+
+python main.py ori $path > $out;
+python main.py h1 $path >> $out;
+python main.py h2 $path >> $out;
+python main.py angle $path >> $out;
+python main.py angleE $path >> $out;
+python main.py dist $path >> $out;
+python main.py depth $path >> $out;
+python main.py handedness $path >> $out;
+
+echo "writed to ${out}"

@@ -10,6 +10,8 @@ def read_data():
 
     mph_input_list = []
     for k,v in data.items():
+        dataset_name = v['set']
+        if dataset_name != 'te': continue
         img_name = v['img_path'].split('/')[-1]
         gt = int(v['gt']) 
         gt = custom_gt_for_vr_poh_1k(gt)

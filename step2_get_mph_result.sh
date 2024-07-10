@@ -8,7 +8,7 @@ echo "!!! do not forget to activate your python env"
 echo
 
 path=mph_keypoints.json.vr_poh_1k
-out=mph_result.txt.vr_poh_1k
+out=mph_result.txt.vr_poh_1k_only_testing_set
 
 echo "using $path"
 echo "output $out"

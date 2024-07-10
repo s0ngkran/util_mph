@@ -115,4 +115,7 @@ def main():
     print(disp(w))
 
 if __name__ == '__main__':
+    sys.argv.append('ori')
+    path='mph_keypoints.json'
+    sys.argv.append(path)
     main()

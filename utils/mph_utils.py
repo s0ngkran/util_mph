@@ -29,6 +29,7 @@ class MPHResult:
     pred_tfs_pointing_kps: List
     gt_tfs_keypoints: List
     avg_depths: List
+    handedness: List
     method: str
     can_pred: bool = False
     is_correct: bool = False
@@ -43,18 +44,17 @@ class MPHResult:
         assert img is not None, 'img_path = %s'%path
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return img
-    def avg(self, l):
-
-        s = sum(l)
-        l = len(l)
-        if l == 0:
+    def avg(self, dat): 
+        s = sum(dat)
+        n = len(dat)
+        if n == 0:
             return None
-        return s/l
+        return s/n
 
-
-    def __init__(self, dat, mph_keypoints, method, has_gt_keypoints = True):
-        assert method in ['ori', 'h1', 'h2', 'angle', 'angleE', 'dist', 'depth']
+    def __init__(self, dat, mph_keypoints, handedness, method, has_gt_keypoints = True):
+        assert method in ['ori', 'h1', 'h2', 'angle', 'angleE', 'dist', 'depth', 'handedness']
         self.method = method
+        self.handedness = handedness
         self.img_path = dat.img_path
         self.gt = dat.gt
         # self.hand_side = dat['hand_side']
@@ -73,7 +73,7 @@ class MPHResult:
         self.mph_keypoints = mph_keypoints
         self.n_hand = self.get_n_hand(mph_keypoints)
         r = self.do_pred(self.n_hand, mph_keypoints)
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         self.pointing_hand, self.palm_hand, self.pred_tfs, self.pred_tfs_palm_kps, self.pred_tfs_pointing_kps = r
         self.key = dat.img_name
@@ -84,14 +84,14 @@ class MPHResult:
 
     def do_pred_force(self, mph_keypoints):
         r = self.do_pred(self.n_hand, mph_keypoints, force='h1')
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
         self.force_h1_pred = pred_tfs
         self.is_force_h1_correct = pred_tfs == self.gt
 
         r = self.do_pred(self.n_hand, mph_keypoints, force='h2')
-        if type(r) == str:
+        if type(r) is str:
             r = [], [], r, [], None
         pointing_hand, palm_hand, pred_tfs, pred_tfs_palm_kps, pred_tfs_pointing_kps = r
         self.force_h2_pred = pred_tfs
@@ -126,6 +126,13 @@ class MPHResult:
             is_hand1_pointing, is_hand2_pointing = self.rule_based_dist(hand1, hand2)
         elif self.method == 'depth':
             is_hand1_pointing, is_hand2_pointing = self.rule_based_depth(hand1, hand2)
+        elif self.method == 'handedness':
+            is_hand1_pointing, is_hand2_pointing = self.rule_based_handedness(hand1, hand2)
+            if self.handedness[0] == self.handedness[1]:
+                if self.handedness[0] == 'L':
+                    return 'False; two pointing_hand'
+                else:
+                    return 'False; two palm_hand'
 
 
         if force is not None:
@@ -239,6 +246,19 @@ class MPHResult:
             is_hand2_pointing = False
         return is_hand1_pointing, is_hand2_pointing
 
+    def rule_based_handedness(self, hand1, hand2):
+        # find more angle
+        h1 = self.handedness[0]
+        # h2 = self.handedness[1]
+        if h1 == 'L':
+            # left hand is palm
+            is_hand1_pointing = False
+            is_hand2_pointing = True
+        else:
+            is_hand1_pointing = True
+            is_hand2_pointing = False
+        return is_hand1_pointing, is_hand2_pointing
+
 
     def __str__(self):
         return f'<MPH-{self.key}|gt_{self.gt}|pred_tfs{self.pred_tfs}>'
@@ -280,7 +300,7 @@ def mph_pack(method, mph_result_path='mph_keypoints.json'):
         m = mph_keypoints[key]
         kps = m['keypoints']
         hds = m['handedness']
-        dat = MPHResult(dat, kps, method, has_gt_keypoints=False)
+        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints=False)
         pack.append(dat)
     return pack
 

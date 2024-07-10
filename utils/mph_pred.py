@@ -68,7 +68,7 @@ def mph_pred_folder():
             'handedness': handedness,
         }
         out[key] = value
-    save_json()
+    save_json(out, 'mph_keypoints.json')
 
 def test():
     mph_pred_folder()

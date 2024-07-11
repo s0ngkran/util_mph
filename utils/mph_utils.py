@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from dataclasses import dataclass
 from typing import List
 from swap_hand import is_pointing_hand
@@ -42,6 +43,7 @@ class MPHResult:
     gt_palm_keypoints: str = 'List'
     mph_palm_keypoints: str = 'List'
     kp: str = 'List'
+    pointing_finger_diff: int = -1
 
     def read_img(self):
         path = self.img_path
@@ -91,6 +93,25 @@ class MPHResult:
             self.is_force_correct = self.is_force_h1_correct or self.is_force_h2_correct
             self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
             self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
+            self.pointing_finger_diff = self.get_pointing_finger_diff()
+
+    def get_dist(self, p1, p2):
+        p1, p2 = np.array(p1), np.array(p2)
+        dist = np.linalg.norm(p2 - p1)
+        return dist
+
+    def get_pointing_finger_diff(self):
+        pred = self.pointing_hand[8]
+        gt = self.gt_keypoints[0]
+        dist = self.get_dist(pred, gt)
+
+        wrist = self.gt_keypoints[7]
+        middle_mcp = self.gt_keypoints[12]
+        dist_ref = self.get_dist(wrist, middle_mcp)
+
+        dist = dist/dist_ref*100
+        return dist
+
     def get_mph_pointing_keypoints(self, hand):
         return [hand[i] for i in [5,6,7,8]]
     def get_mid_point(self, p1, p2):

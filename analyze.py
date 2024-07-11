@@ -1,4 +1,5 @@
 import sys
+import scipy 
 sys.path.append('./utils')
 import numpy as np
 from collections import Counter
@@ -54,6 +55,11 @@ def plot_gt_pred(plt,x):
     # dist = np.linalg.norm(np.array(tip) - np.array(target_p))
     # plt.text(target_p[0], target_p[1], f'{dist:.0f}')
 
+def get_dist(p1, p2):
+    p1, p2 = np.array(p1), np.array(p2)
+    dist = np.linalg.norm(p2 - p1)
+    return dist
+
 def show(plt, x):
     img = x.read_img()
     plt.imshow(img)
@@ -74,9 +80,7 @@ def show(plt, x):
     # plt.gca().invert_yaxis()
 
 
-def plot_two_hands_not_correct():
-    _, mph_path, gt_path = sys.argv
-    o = MPHPack(mph_path, gt_path)
+def plot_two_hands_not_correct(o):
     print(f'{o.acc=:.2f}%')
     print(f'{o.n=} {o.n_pred_zero_hand=} {o.n_pred_one_hand=} {o.n_pred_two_hands=}')
 
@@ -97,8 +101,72 @@ def plot_two_hands_not_correct():
     plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()
 
-def main():
-    plot_two_hands_not_correct()
+def check_keypoint(o):
+    # for i, (a, b) in enumerate(x.gt_keypoints):
+    #     if i not in [7, 12]:continue
+    #     plt.plot(a, b, 'mo')
+    #     plt.text(a+10, b, str(i))
+    # img = x.read_img()
+    # plt.imshow(img)
+    # plt.show()
+    pass
+
+def shapiro_wilk(data):
+    res = scipy.stats.shapiro(data)
+    is_normal =  res.pvalue > 0.05 
+    return res.pvalue, is_normal
+
+def mannwhitneyu(data1, data2):
+    # mann is for non-normal
+    p1, is_normal1 = shapiro_wilk(data1)
+    p2, is_normal2 = shapiro_wilk(data2)
+    assert is_normal1 == False
+    assert is_normal2 == False
+
+    res = scipy.stats.mannwhitneyu(data1, data2)
+    is_difference = res.pvalue < 0.05
+    return res.pvalue, is_difference
+
+def stat_of_two_hands(corr, fail):
+    p, is_normal = shapiro_wilk(corr)
+    print(f'correct => p={p} is_normal={is_normal}')
+    p, is_normal = shapiro_wilk(fail)
+    print(f'fail => p={p:.4f} is_normal={is_normal}')
+
+    p, is_difference = mannwhitneyu(corr, fail)
+    print(f'corr and fail is_difference={is_difference} with p-value={p:.4f}')
+
+
+def plot_two_hands_box(o):
+    two = o.two
+    x = two[0]
+
+    dist = x.pointing_finger_diff
+    is_correct = x.is_correct
+
+    data = {
+        'Correct': [d.pointing_finger_diff for d in o.two if d.is_correct],
+        'Fail': [d.pointing_finger_diff for d in o.two if not d.is_correct]
+    }
+    names = data.keys()
+    data_group = list(data.values())
+    plt.boxplot(data_group, labels=names)
+    # plt.violinplot(data)
+    plt.ylabel('Index finger tip error (% palm size)')
+
+    corr = data_group[0]
+    fail = data_group[1]
+
+    stat_of_two_hands(corr, fail)
+
+    plt.show()
+
+def main(o):
+    # plot_two_hands_not_correct(o)
+    plot_two_hands_box(o)
+
 
 if __name__ == '__main__':
-    main()
+    _, mph_path, gt_path = sys.argv
+    o = MPHPack(mph_path, gt_path)
+    main(o)

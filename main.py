@@ -55,10 +55,9 @@ def plot(dat, text='', raw_pred=False):
     plt.show()
 
 def main():
-    argv = sys.argv
-    method = argv[1]
-    path = argv[2]
-    mph = mph_pack(method, path)
+    _, method, path = sys.argv
+    gt_path = '../data_zip/poh_plain_vs_natural/processed/poh_black_testing.json'
+    mph = mph_pack(method, path, gt_path)
 
     correct = 0
     can_pred = 0
@@ -115,7 +114,4 @@ def main():
     print(disp(w))
 
 if __name__ == '__main__':
-    sys.argv.append('ori')
-    path='mph_keypoints.json'
-    sys.argv.append(path)
     main()

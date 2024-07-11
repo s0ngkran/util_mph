@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./utils')
+import random as r
 import numpy as np
 from collections import Counter
 from mph_pack import MPHPack
@@ -82,8 +83,11 @@ def plot_two_hands_not_correct():
 
     two = o.two
     two_n = o.two_hands_not_correct
-    print(f'two hands correct = {(o.n_correct/o.n_pred_two_hands)*100}%')
-    print(f'two hand not correct = {len(two_n)/o.n_pred_two_hands*100}%')
+    print(f'two hands correct = {(o.n_correct/o.n_pred_two_hands)*100:.2f}%')
+    print(f'two hand not correct = {len(two_n)/o.n_pred_two_hands*100:.2f}%')
+
+    seed = 0
+    two_n = r.Random(seed).sample(two_n, 10)
 
     n = len(two_n)
     col = 5
@@ -93,6 +97,8 @@ def plot_two_hands_not_correct():
         x = two_n[i]
         title = show(axs[i], x)
         axs[i].axis('off')
+        # title = show(plt, x)
+        # plt.show()
 
     plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()

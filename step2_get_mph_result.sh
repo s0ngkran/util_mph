@@ -13,13 +13,14 @@ out=mph_result.txt.poh_plain_black
 echo "using $path"
 echo "output $out"
 
-python main.py ori $path > $out;
-python main.py h1 $path >> $out;
-python main.py h2 $path >> $out;
-python main.py angle $path >> $out;
-python main.py angleE $path >> $out;
-python main.py dist $path >> $out;
-python main.py depth $path >> $out;
-python main.py handedness $path >> $out;
+python main.py depth $path ;
+# python main.py ori $path > $out;
+# python main.py h1 $path >> $out;
+# python main.py h2 $path >> $out;
+# python main.py angle $path >> $out;
+# python main.py angleE $path >> $out;
+# python main.py dist $path >> $out;
+# python main.py depth $path >> $out;
+# python main.py handedness $path >> $out;
 
 echo "writed to ${out}"

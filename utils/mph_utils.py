@@ -67,6 +67,7 @@ class MPHResult:
         # assert self.hand_side in ['L', 'R']
         palm_ind_list = [0,1,3,4,5,8,9,12,13,16,17] # 20 is pinky
         if has_gt_keypoints:
+            assert len(dat.gt_keypoints) in [21, 42]
             self.gt_keypoints = dat.gt_keypoints
             self.gt_palm_keypoints = dat.gt_palm_keypoints
             self.gt_tfs_keypoints = [self.gt_keypoints[i] for i in palm_ind_list]
@@ -85,6 +86,7 @@ class MPHResult:
         self.pointing_hand, self.palm_hand, self.pred_tfs, self.pred_tfs_palm_kps, self.pred_tfs_pointing_kps = r
         self.key = dat.img_name
         if self.n_hand == 2:
+            assert len(mph_keypoints) == 42, 'do forget to use method=depth'
             self.can_pred = True
             self.is_correct = self.pred_tfs == self.gt
             self.do_pred_force(mph_keypoints)
@@ -97,7 +99,7 @@ class MPHResult:
         point = (p2[0] + p1[0]) /2, (p2[1] + p1[1])/2
         return point
     def get_mph_palm_keypoints(self, hand):
-        assert len(hand) == 21
+        assert len(hand) == 21, f'{len(hand)=}'
         palm = [hand[0], hand[2], hand[4]]
         mid_point = self.get_mid_point(hand[0], hand[9])
         palm.append(mid_point)
@@ -323,7 +325,7 @@ def mph_pack(method, mph_result_path='mph_keypoints.json', gt_keypoint_path=None
         m = mph_keypoints[key]
         kps = m['keypoints']
         hds = m['handedness']
-        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints=gt_keypoint_path!=None)
+        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints='black' not in gt_keypoint_path)
         pack.append(dat)
     return pack
 

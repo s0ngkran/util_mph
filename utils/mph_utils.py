@@ -31,12 +31,17 @@ class MPHResult:
     avg_depths: List
     handedness: List
     method: str
+    raw_dat: str = ''
     can_pred: bool = False
     is_correct: bool = False
     force_h1_pred: str = ''
     force_h2_pred: str = ''
     is_force_h1_correct: bool = False
     is_force_h2_correct: bool = False
+    is_force_correct: bool = False
+    gt_palm_keypoints: str = 'List'
+    mph_palm_keypoints: str = 'List'
+    kp: str = 'List'
 
     def read_img(self):
         path = self.img_path
@@ -57,11 +62,13 @@ class MPHResult:
         self.handedness = handedness
         self.img_path = dat.img_path
         self.gt = dat.gt
+        self.raw_dat = dat
         # self.hand_side = dat['hand_side']
         # assert self.hand_side in ['L', 'R']
         palm_ind_list = [0,1,3,4,5,8,9,12,13,16,17] # 20 is pinky
         if has_gt_keypoints:
-            self.gt_keypoints = [(float(x), float(y)) for x,y,_ in dat['keypoint']]
+            self.gt_keypoints = dat.gt_keypoints
+            self.gt_palm_keypoints = dat.gt_palm_keypoints
             self.gt_tfs_keypoints = [self.gt_keypoints[i] for i in palm_ind_list]
         else:
             self.gt_keypoints = []
@@ -81,6 +88,22 @@ class MPHResult:
             self.can_pred = True
             self.is_correct = self.pred_tfs == self.gt
             self.do_pred_force(mph_keypoints)
+            self.is_force_correct = self.is_force_h1_correct or self.is_force_h2_correct
+            self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
+            self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
+    def get_mph_pointing_keypoints(self, hand):
+        return [hand[i] for i in [5,6,7,8]]
+    def get_mid_point(self, p1, p2):
+        point = (p2[0] + p1[0]) /2, (p2[1] + p1[1])/2
+        return point
+    def get_mph_palm_keypoints(self, hand):
+        assert len(hand) == 21
+        palm = [hand[0], hand[2], hand[4]]
+        mid_point = self.get_mid_point(hand[0], hand[9])
+        palm.append(mid_point)
+        palm = palm + [hand[i] for i in [5,8,9,12,13,16,17]]
+        assert len(palm) == 11
+        return palm
 
     def do_pred_force(self, mph_keypoints):
         r = self.do_pred(self.n_hand, mph_keypoints, force='h1')
@@ -289,9 +312,9 @@ def mph_to_gt(pointing_hand, palm_hand):
     assert len(keypoints) == 25, f'len keypoints = {len(keypoints)}'
     return keypoints
 
-def mph_pack(method, mph_result_path='mph_keypoints.json'):
+def mph_pack(method, mph_result_path='mph_keypoints.json', gt_keypoint_path=None):
     # img_dir = read_config('./config.json')
-    data = read_data()
+    data = read_data(path=gt_keypoint_path)
     mph_keypoints = load_mph_result(json_path=mph_result_path)
     pack = []
     for dat in data:
@@ -300,7 +323,7 @@ def mph_pack(method, mph_result_path='mph_keypoints.json'):
         m = mph_keypoints[key]
         kps = m['keypoints']
         hds = m['handedness']
-        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints=False)
+        dat = MPHResult(dat, kps, hds, method, has_gt_keypoints=gt_keypoint_path!=None)
         pack.append(dat)
     return pack
 

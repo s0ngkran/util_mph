@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 import os
 
 gt_list = [i for i in range(11)]
@@ -7,6 +8,8 @@ class MPHInput:
     folder: str
     img_name: str
     gt: int
+    gt_keypoints: str = 'List'
+    gt_palm_keypoints: str = 'List'
     img_path: str = ''
 
     def __post_init__(self):

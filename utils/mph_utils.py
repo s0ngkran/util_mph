@@ -6,6 +6,7 @@ from swap_hand import is_pointing_hand
 from tfs import pred, mph_to_tfs
 from read_data import read_data
 from angle import get_angle, get_angle_each, get_dist_pointing
+from overlap import cir_palm, cir_pointing, get_intersect_percent
 import os
 try:
     import cv2
@@ -44,6 +45,8 @@ class MPHResult:
     mph_palm_keypoints: str = 'List'
     kp: str = 'List'
     pointing_finger_diff: int = -1
+    percent_palm_overlap: int = -1
+    hand_overlap: int = -1
 
     def read_img(self):
         path = self.img_path
@@ -94,6 +97,57 @@ class MPHResult:
             self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
             self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
             self.pointing_finger_diff = self.get_pointing_finger_diff()
+        self.percent_palm_overlap = self.get_percent_palm_overlap()
+        self.hand_overlap = self.get_hand_overlap()
+    def get_hand_overlap(self):
+        assert len(self.gt_keypoints) == 19 # gt of poh-vr-1k
+        keypoints = self.gt_keypoints
+
+        palm_hand = [keypoints[i] for i in range(7,19)]
+        pointing_hand = [keypoints[i] for i in [0,1]]
+        return self.find_overlap_area(palm_hand, pointing_hand)
+
+    def find_overlap_area(self, group1, group2):
+        # Convert lists to numpy arrays
+        group1 = np.array(group1)
+        group2 = np.array(group2)
+        
+        # Get the min and max coordinates for group1
+        min_x1, min_y1 = np.min(group1, axis=0)
+        max_x1, max_y1 = np.max(group1, axis=0)
+        
+        # Get the min and max coordinates for group2
+        min_x2, min_y2 = np.min(group2, axis=0)
+        max_x2, max_y2 = np.max(group2, axis=0)
+        
+        # Calculate the overlap area
+        overlap_min_x = max(min_x1, min_x2)
+        overlap_min_y = max(min_y1, min_y2)
+        overlap_max_x = min(max_x1, max_x2)
+        overlap_max_y = min(max_y1, max_y2)
+        
+        # Compute the width and height of the overlap rectangle
+        overlap_width = max(0, overlap_max_x - overlap_min_x)
+        overlap_height = max(0, overlap_max_y - overlap_min_y)
+        
+        # Return the area of the overlap rectangle
+        return overlap_width * overlap_height
+
+
+    def get_percent_palm_overlap(self):
+        assert len(self.gt_keypoints) == 19 # gt of poh-vr-1k
+        keypoints = self.gt_keypoints
+        mid = keypoints[18]
+        mid_mcp = keypoints[15]
+        c1, r1 = cir_palm(mid, mid_mcp)
+
+        index_tip = keypoints[0]
+        index_mcp = keypoints[1]
+        is_flip = True
+        # c2, radius_unused = cir_pointing(index_tip, index_mcp, is_flip)
+        c2, radius_unused = cir_pointing(index_mcp, index_tip, is_flip)
+        percent = get_intersect_percent(c1, c2, r1, r1)
+        return percent
 
     def get_dist(self, p1, p2):
         p1, p2 = np.array(p1), np.array(p2)

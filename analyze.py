@@ -101,15 +101,52 @@ def plot_two_hands_not_correct(o):
     plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()
 
-def check_keypoint(o):
-    # for i, (a, b) in enumerate(x.gt_keypoints):
-    #     if i not in [7, 12]:continue
-    #     plt.plot(a, b, 'mo')
-    #     plt.text(a+10, b, str(i))
-    # img = x.read_img()
-    # plt.imshow(img)
-    # plt.show()
-    pass
+def check_keypoint(x):
+    img = x.read_img()
+    plt.imshow(img)
+    first = [
+        [0,1],
+        [1,2],
+        [2,3],
+        [3,4],
+    ]
+    mid = [
+        [4,5],
+    ]
+    last = [
+        [5,6],
+        [6,7],
+        [7,8],
+        [8,9],
+        [7,18],
+        [12,18],
+        [10,11],
+        [12,13],
+        [14,15],
+        [16,17],
+        [16,15],
+        [15,12],
+        [12,11],
+
+    ]
+    hand = x.gt_keypoints
+    lines = first
+    for i, j in lines:
+        a, b = hand[i], hand[j]
+        plt.plot([a[0], b[0]], [a[1], b[1]], '-b')
+    lines = mid
+    for i, j in lines:
+        a, b = hand[i], hand[j]
+        plt.plot([a[0], b[0]], [a[1], b[1]], '-b')
+    lines = last
+    for i, j in lines:
+        a, b = hand[i], hand[j]
+        plt.plot([a[0], b[0]], [a[1], b[1]], '-g')
+    for i, (a, b) in enumerate(x.gt_keypoints):
+        # if i not in [0,1,18,15]:continue
+        plt.plot(a, b, 'rx', markersize=10, markeredgewidth=3)
+        # plt.text(a+10, b, str(i))
+    plt.show()
 
 def shapiro_wilk(data):
     res = scipy.stats.shapiro(data)
@@ -160,10 +197,222 @@ def plot_two_hands_box(o):
     stat_of_two_hands(corr, fail)
 
     plt.show()
+def print_causes_fail(o):
+    print(f'{o.n_pred_zero_hand/o.n*100:.2f}')
+    print(f'{o.n_pred_one_hand/o.n*100:.2f}')
+    print(f'{(o.n_pred_two_hands-o.n_correct)/o.n*100:.2f}')
+    print(f'{o.n_correct/o.n*100:.2f}')
+    pass
 
+def plot_causes_fail():
+    data = {
+        'correct - two hands': 60.40,
+        'fail - two hands': 6.71,
+        'fail - one hand': 31.54,
+        'fail - zero hand': 1.34,
+    }
+    labels = list(data.keys())
+    values = list(data.values())
+
+    font = {'family' : 'normal',
+            'weight' : 'bold',
+            'size'   : 14}
+
+    plt.figure(facecolor='red')
+    plt.rc('font', **font)
+    colors = ['green', 'mistyrose', 'salmon', 'red']
+    plt.pie(values,startangle=90,autopct='%1.1f%%', colors=colors, labels=labels)
+    plt.show()
+
+def plot_palm_ov_correct_fail(o):
+    two = o.two
+    ov_correct = [p.percent_palm_overlap for p in two if p.is_correct] 
+    ov_fail = [p.percent_palm_overlap for p in two if not p.is_correct] 
+
+    data = {
+        'Correct': ov_correct,
+        'Fail': ov_fail,
+    }
+    names = data.keys()
+    data_group = list(data.values())
+    plt.boxplot(data_group, labels=names)
+    plt.ylabel('Palm overlapping (%)')
+
+    res = mannwhitneyu(ov_correct, ov_fail)
+    print(f'correct fail {res[0]:.4f}', res[1])
+    plt.show()
+
+def plot_palm_ov_index_fing(o):
+    two = o.two
+    for p in two:
+        ov = p.percent_palm_overlap
+        err = p.pointing_finger_diff
+        c = p.is_correct
+        color = 'xg' if c else 'xr'
+        plt.plot(ov, err, color)
+    plt.xlabel('Palm overlapping (%)')
+    plt.ylabel('Index finger error (% palm)')
+    plt.show()
+def plot_hand_overlap_correct_fail(o):
+    two = o.two
+    ov_cor = [p.hand_overlap for p in two if p.is_correct]
+    ov_fail = [p.hand_overlap for p in two if not p.is_correct]
+    plt.boxplot([ov_cor, ov_fail])
+    plt.show()
+
+    res = shapiro_wilk(ov_cor)
+    print(res)
+    res = shapiro_wilk(ov_fail)
+    print(res)
+
+    # res = mannwhitneyu(ov_cor, ov_fail)
+
+def plot_hand_ov_one_two(o):
+    one = o.one
+    two = o.two
+    # one_ov = [p.hand_overlap for p in one]
+    # two_ov = [p.hand_overlap for p in two]
+    one_ov = [p.percent_palm_overlap for p in one]
+    two_ov = [p.percent_palm_overlap for p in two]
+    plt.boxplot([one_ov, two_ov])
+    plt.show()
+    
+def plot_palm_ov_one_two(o):
+    one = o.one
+    two = o.two
+    zero = o.zero
+    # print(len(zero))
+    # plt.imshow(zero[1].read_img())
+    # plt.show()
+    # 1/0
+    # one_ov = [p.hand_overlap for p in one]
+    # two_ov = [p.hand_overlap for p in two]
+    one_ov = [p.percent_palm_overlap for p in one]
+    two_ov = [p.percent_palm_overlap for p in two]
+    zero_ov = [p.percent_palm_overlap for p in zero]
+    data = {
+        'Zero hand': zero_ov,
+        'One hand': one_ov,
+        'Two hands': two_ov,
+    }
+    print(len(zero), len(one), len(two))
+    names = data.keys()
+    data_group = list(data.values())
+    plt.boxplot(data_group, labels=names)
+    plt.ylabel('Palm overlapping (%)')
+    plt.title('MPH-detected hands')
+
+    res = mannwhitneyu(one_ov, two_ov)
+    print(f'one two is_diff={res[1]} p={res[0]:.4e}')
+    res = mannwhitneyu(zero_ov, two_ov)
+    print(f'zero two is_diff={res[1]} p={res[0]:.6f}')
+    plt.show()
+
+def cir_palm(mid_point, ref_point):
+    point1 = np.array(mid_point)
+    point2 = np.array(ref_point)
+    
+    vector = point2 - point1
+    radius = np.linalg.norm(vector) 
+    center = mid_point
+    return center, radius
+
+def plot_cir(center, radius):
+    # plot(center, color='go')
+    # plot(midpoint, color='go')
+    cir = plt.Circle(center, radius, edgecolor='g', facecolor='none')
+    plt.gca().add_patch(cir)
+def cir_pointing(p1, p2, is_flip):
+    center, midpoint, radius = create_vector(p1, p2, is_flip)
+    return center, radius
+def create_vector(point1, point2, is_flip):
+    point1 = np.array(point1)
+    point2 = np.array(point2)
+    
+    vector = point2 - point1
+    dist = np.linalg.norm(vector) * .5
+    
+    midpoint = point1 + 0.5 * vector
+    
+    scaled_vector = 0.5 * vector
+    
+    # rotated_vector = rotate_vector(scaled_vector, -135 )
+    angle = -135 if is_flip else 135
+    rotated_vector = rotate_vector(scaled_vector, angle)
+    
+    new_endpoint = point1 + rotated_vector
+    
+    return new_endpoint, midpoint, dist
+
+def rotate_vector(vector, angle_degrees):
+    angle_radians = np.deg2rad(angle_degrees)
+    rotation_matrix = np.array([
+        [np.cos(angle_radians), -np.sin(angle_radians)],
+        [np.sin(angle_radians), np.cos(angle_radians)]
+    ])
+    return np.dot(rotation_matrix, vector)
+def img_out(o):
+
+        # mid = keypoints[18]
+        # mid_mcp = keypoints[15]
+        # c1, r1 = cir_palm(mid, mid_mcp)
+
+        # index_tip = keypoints[0]
+        # index_mcp = keypoints[1]
+        # is_flip = True
+        # c2, radius_unused = cir_pointing(index_tip, index_mcp, is_flip)
+        # percent = get_intersect_percent(c1, c2, r1, r1)
+    n = len(o.two)
+    for i in range(n):
+        x = o.two[i]
+        print(i, n, x.percent_palm_overlap)
+        plt.imshow(x.read_img())
+        keypoints = x.gt_keypoints
+        
+        mid = keypoints[18]
+        mid_mcp = keypoints[15]
+        c1, r1 = cir_palm(mid, mid_mcp)
+        plot_cir(c1, r1)
+        index_tip = keypoints[0]
+        index_mcp = keypoints[1]
+        is_flip = True
+        c2, radius_unused = cir_pointing(index_mcp, index_tip, is_flip)
+        plot_cir(c2, r1)
+        # percent = get_intersect_percent(c1, c2, r1, r1)
+
+        for i, (a, b) in enumerate(x.gt_keypoints):
+            plt.plot(a,b,'bo')
+            plt.text(a,b, str(i))
+        plt.title(f'ov {x.percent_palm_overlap}% h{x.n_hand} {x.key}')
+        # plt.savefig('.temp/two/'+x.key)
+        plt.show()
+        break
+    # plt.show()
+    
 def main(o):
     # plot_two_hands_not_correct(o)
-    plot_two_hands_box(o)
+    # plot_two_hands_box(o)
+    # print_causes_fail(o)
+    # plot_causes_fail()
+    # plot_palm_ov_correct_fail(o)
+    # plot_palm_ov_index_fing(o)
+    plot_palm_ov_one_two(o)
+    # plot_hand_overlap_correct_fail(o)
+    # plot_hand_ov_one_two(o)
+    # img_out(o)
+
+    # two = o.two
+
+    # two_corr = [p for p in two if p.is_correct] 
+    # # for i in range(len(two_corr)):
+    # #     x = two_corr[i]
+    # #     plt.title(str(i))
+    # #     check_keypoint(x)
+    # i = 9
+    # x = two_corr[i]
+    # plt.title(str(i))
+    # check_keypoint(x)
+    pass
 
 
 if __name__ == '__main__':

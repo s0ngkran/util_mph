@@ -95,8 +95,9 @@ class MPHResult:
             self.do_pred_force(mph_keypoints)
             self.is_force_correct = self.is_force_h1_correct or self.is_force_h2_correct
             self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
-            self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
-            self.pointing_finger_diff = self.get_pointing_finger_diff()
+            if method != 'ori':
+                self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
+                self.pointing_finger_diff = self.get_pointing_finger_diff()
         self.percent_palm_overlap = self.get_percent_palm_overlap()
         self.hand_overlap = self.get_hand_overlap()
     def get_hand_overlap(self):

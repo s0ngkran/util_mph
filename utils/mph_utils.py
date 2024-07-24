@@ -91,8 +91,10 @@ class MPHResult:
             self.is_correct = self.pred_tfs == self.gt
             self.do_pred_force(mph_keypoints)
             self.is_force_correct = self.is_force_h1_correct or self.is_force_h2_correct
-            self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
-            self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
+
+            if method != 'ori':
+                self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
+                self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
     def get_mph_pointing_keypoints(self, hand):
         return [hand[i] for i in [5,6,7,8]]
     def get_mid_point(self, p1, p2):

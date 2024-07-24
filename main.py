@@ -95,8 +95,15 @@ def main():
         if dat.is_force_h2_correct:
             force_correct_list.append('fh2')
 
+    met = {
+            'angle': 'MPHA',
+            'dist': 'MPHD',
+            'depth': 'MPHZ',
+            'ori': 'MPHV',
+            'paper': 'MPHO',
+    }
     print(f'{can_pred=} {can_pred/all*100:.2f}%')
-    print(f'{correct=} {correct/all*100:.2f}%')
+    print(f'{met[method]} {correct=}/{all} {correct/all*100:.2f}%')
 
     ff = Counter(force_correct_list)
     print(f'force method {len(force_correct_list)=} {len(force_correct_list)/all*100:.2f}%')

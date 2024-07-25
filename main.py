@@ -54,10 +54,8 @@ def plot(dat, text='', raw_pred=False):
             plt.plot(x, y, 'yo')
     plt.show()
 
-def main():
-    _, method, path = sys.argv
-    gt_path = '../data_zip/poh_plain_vs_natural/processed/poh_black_testing.json'
-    mph = mph_pack(method, path, gt_path)
+def main(method, path, gt_keypoint_path):
+    mph = mph_pack(method, path, gt_keypoint_path)
 
     correct = 0
     can_pred = 0
@@ -100,6 +98,10 @@ def main():
             'depth': 'MPHZ',
             'ori': 'MPHV',
             'paper': 'MPHO',
+            'h1': 'h1',
+            'h2': 'h2',
+            'angleE': 'angleE',
+            'handedness': 'handedness',
     }
     print(f'{can_pred=} {can_pred/all*100:.2f}%')
     print(f'{met[method]} {correct=}/{all} {correct/all*100:.2f}%')
@@ -121,4 +123,6 @@ def main():
     print(disp(w))
 
 if __name__ == '__main__':
-    main()
+    # print('argv', sys.argv)
+    _, method, path, gt_keypoint_path = sys.argv
+    main(method, path, gt_keypoint_path)

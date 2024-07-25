@@ -400,6 +400,19 @@ def img_out(o):
         plt.show()
         break
     # plt.show()
+
+def get_n(o):
+    two = o.two
+    two_corr = [x for x in two if x.is_correct]
+    two_fail = [x for x in two if not x.is_correct]
+    one_fail = o.one 
+    zero_fail = o.zero
+    n = o.pack
+    print(f'{len(two_corr)=} {len(two_corr)/len(n)*100:.2f}%')
+    print(f'{len(two_fail)=} {len(two_fail)/len(n)*100:.2f}%')
+    print(f'{len(one_fail)=} {len(one_fail)/len(n)*100:.2f}%')
+    print(f'{len(zero_fail)=} {len(zero_fail)/len(n)*100:.2f}%')
+    print(f'{len(n)=}')
     
 def main(o):
     # plot_two_hands_not_correct(o)
@@ -423,8 +436,9 @@ def main(o):
     # i = 9
     # x = two_corr[i]
     # plt.title(str(i))
-    x = o.two[0]
-    check_mph_keypoint(x)
+    # x = o.two[0]
+    get_n(o)
+    # check_mph_keypoint(x)
     pass
 
 

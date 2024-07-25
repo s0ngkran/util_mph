@@ -5,6 +5,10 @@ import numpy as np
 from collections import Counter
 from mph_pack import MPHPack
 import scipy
+import json
+import os
+from dataclasses import dataclass
+import shutil as s
 try:
     import matplotlib.pyplot as plt
 except:
@@ -291,11 +295,34 @@ def plot_hand_ov_one_two(o):
     two_ov = [p.percent_palm_overlap for p in two]
     plt.boxplot([one_ov, two_ov])
     plt.show()
+
+@dataclass
+class MyO:
+    n_hand: int
+    palm_overlap: int
+    is_correct: int
+    
+    def to_json(self):
+        return {
+            "n_hand": self.n_hand,
+            "palm_overlap": self.palm_overlap,
+            "is_correct": self.is_correct,
+        }
+def write_overlap_n_hand_json(o):
+    X = []
+    for p in o.pack:
+        x = MyO(p.n_hand, p.percent_palm_overlap, p.is_correct)
+        X.append(x)
+    
+    js = [x.to_json() for x in X]
+    with open('overlap_n_hand.json', 'w') as f:
+        json.dump(js, f)
     
 def plot_palm_ov_one_two(o):
     one = o.one
     two = o.two
     zero = o.zero
+
     # print(len(zero))
     # plt.imshow(zero[1].read_img())
     # plt.show()
@@ -416,9 +443,24 @@ def get_n(o):
     print(f'{len(one_fail)=} {len(one_fail)/len(n)*100:.2f}%')
     print(f'{len(zero_fail)=} {len(zero_fail)/len(n)*100:.2f}%')
     print(f'{len(n)=}')
+
+def save_img_zero_hand(o):
+    zero = [d for d in o.pack if d.n_hand == 0]
+    print(len(zero))
+    print(zero[0].img_path)
+    for d in zero:
+        path = d.img_path
+        name = path.split('/')[-1]
+        src = path
+        dst = os.path.join('.temp/zero', name)
+        # s.copyfile(src, dst)
+        # print(dst)
+        out = os.path.join('zero_hand_images', name)
+        print(f'![alt]({out})')
+
     
 def main(o):
-    # plot_two_hands_not_correct(o)
+    plot_two_hands_not_correct(o)
     # plot_two_hands_box(o)
     # print_causes_fail(o)
     # plot_causes_fail()
@@ -440,8 +482,10 @@ def main(o):
     # x = two_corr[i]
     # plt.title(str(i))
     # x = o.two[0]
-    get_n(o)
+    # get_n(o)
     # check_mph_keypoint(x)
+    # write_overlap_n_hand_json(o)
+    # save_img_zero_hand(o)
     pass
 
 

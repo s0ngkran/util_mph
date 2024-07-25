@@ -80,9 +80,7 @@ def show(plt, x):
     # plt.gca().invert_yaxis()
 
 
-def plot_two_hands_not_correct():
-    _, mph_path, gt_path = sys.argv
-    o = MPHPack(mph_path, gt_path)
+def plot_two_hands_not_correct(o):
     print(f'{o.acc=:.2f}%')
     print(f'{o.n=} {o.n_pred_zero_hand=} {o.n_pred_one_hand=} {o.n_pred_two_hands=}')
 
@@ -490,4 +488,6 @@ def main(o):
 
 
 if __name__ == '__main__':
-    main()
+    _, mph_path, gt_path = sys.argv
+    o = MPHPack(mph_path, gt_path)
+    main(o)

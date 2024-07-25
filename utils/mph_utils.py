@@ -2,7 +2,7 @@ import json
 import numpy as np
 from dataclasses import dataclass
 from typing import List
-from swap_hand import is_pointing_hand
+from swap_hand import is_pointing_hand, is_pointing_hand_paper, is_open_palm_paper
 from tfs import pred, mph_to_tfs
 from read_data import read_data
 from angle import get_angle, get_angle_each, get_dist_pointing
@@ -62,7 +62,7 @@ class MPHResult:
         return s/n
 
     def __init__(self, dat, mph_keypoints, handedness, method, has_gt_keypoints = True):
-        assert method in ['ori', 'h1', 'h2', 'angle', 'angleE', 'dist', 'depth', 'handedness']
+        assert method in ['ori','paper', 'h1', 'h2', 'angle', 'angleE', 'dist', 'depth', 'handedness']
         self.method = method
         self.handedness = handedness
         self.img_path = dat.img_path
@@ -85,6 +85,8 @@ class MPHResult:
         self.mph_keypoints = mph_keypoints
         self.n_hand = self.get_n_hand(mph_keypoints)
         r = self.do_pred(self.n_hand, mph_keypoints)
+        # print(self.n_hand, mph_keypoints, )
+        # print(r)
         if type(r) is str:
             r = [], [], r, [], None
         self.pointing_hand, self.palm_hand, self.pred_tfs, self.pred_tfs_palm_kps, self.pred_tfs_pointing_kps = r
@@ -94,8 +96,9 @@ class MPHResult:
             self.is_correct = self.pred_tfs == self.gt
             self.do_pred_force(mph_keypoints)
             self.is_force_correct = self.is_force_h1_correct or self.is_force_h2_correct
-            self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
-            if method != 'ori':
+            if len(self.palm_hand) != 0:
+                self.mph_palm_keypoints = self.get_mph_palm_keypoints(self.palm_hand)
+            if len(self.pointing_hand) != 0:
                 self.mph_pointing_keypoints = self.get_mph_pointing_keypoints(self.pointing_hand)
                 self.pointing_finger_diff = self.get_pointing_finger_diff()
         self.percent_palm_overlap = self.get_percent_palm_overlap()
@@ -173,7 +176,7 @@ class MPHResult:
         point = (p2[0] + p1[0]) /2, (p2[1] + p1[1])/2
         return point
     def get_mph_palm_keypoints(self, hand):
-        assert len(hand) == 21
+        assert len(hand) == 21, f'len hand={len(hand)}'
         palm = [hand[0], hand[2], hand[4]]
         mid_point = self.get_mid_point(hand[0], hand[9])
         palm.append(mid_point)
@@ -232,7 +235,11 @@ class MPHResult:
                     return 'False; two pointing_hand'
                 else:
                     return 'False; two palm_hand'
-
+        elif self.method == 'paper':
+            # check each finger instead of mean_mid_pink_ring
+            error, is_hand1_pointing, is_hand2_pointing = self.rule_based_paper(hand1, hand2)
+            if error is not None:
+                return error
 
         if force is not None:
             assert force in ['h1', 'h2']
@@ -358,6 +365,23 @@ class MPHResult:
             is_hand2_pointing = False
         return is_hand1_pointing, is_hand2_pointing
 
+    def rule_based_paper(self, hand1, hand2):
+        h1_pointing = is_pointing_hand_paper(hand1)
+        h1_palm = is_open_palm_paper(hand1)
+        h2_pointing = is_pointing_hand_paper(hand2)
+        h2_palm = is_open_palm_paper(hand2)
+        
+        if h1_pointing == h1_palm:
+            error = 'h1 pointing or palm'
+            return error, False, False
+        if h2_pointing == h2_palm:
+            error = 'h2 pointing or palm'
+            return error, False, False
+
+        is_hand1_pointing = True if h1_pointing else False
+        is_hand2_pointing = True if h2_pointing else False
+        error = None
+        return error, is_hand1_pointing, is_hand2_pointing
 
     def __str__(self):
         return f'<MPH-{self.key}|gt_{self.gt}|pred_tfs{self.pred_tfs}>'

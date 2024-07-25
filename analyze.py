@@ -101,6 +101,16 @@ def plot_two_hands_not_correct(o):
     plt.subplots_adjust(wspace=0, hspace=0)
     plt.show()
 
+def check_mph_keypoint(x):
+    img = x.read_img()
+    plt.imshow(img)
+    hands = x.mph_keypoints
+    for i, (a, b) in enumerate(hands):
+        if i not in [5,8]:continue
+        plt.plot(a, b, 'rx', markersize=1, markeredgewidth=1)
+        plt.text(a+10, b, str(b))
+    # plt.title(str(len(x.gt_keypoints)))
+    plt.show()
 def check_keypoint(x):
     img = x.read_img()
     plt.imshow(img)
@@ -142,10 +152,12 @@ def check_keypoint(x):
     for i, j in lines:
         a, b = hand[i], hand[j]
         plt.plot([a[0], b[0]], [a[1], b[1]], '-g')
+    # x-mark
     for i, (a, b) in enumerate(x.gt_keypoints):
         # if i not in [0,1,18,15]:continue
         plt.plot(a, b, 'rx', markersize=10, markeredgewidth=3)
         # plt.text(a+10, b, str(i))
+    # plt.title(str(len(x.gt_keypoints)))
     plt.show()
 
 def shapiro_wilk(data):
@@ -396,7 +408,7 @@ def main(o):
     # plot_causes_fail()
     # plot_palm_ov_correct_fail(o)
     # plot_palm_ov_index_fing(o)
-    plot_palm_ov_one_two(o)
+    # plot_palm_ov_one_two(o)
     # plot_hand_overlap_correct_fail(o)
     # plot_hand_ov_one_two(o)
     # img_out(o)
@@ -411,7 +423,8 @@ def main(o):
     # i = 9
     # x = two_corr[i]
     # plt.title(str(i))
-    # check_keypoint(x)
+    x = o.two[0]
+    check_mph_keypoint(x)
     pass
 
 

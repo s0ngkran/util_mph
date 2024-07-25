@@ -10,8 +10,8 @@ def read_data(path='../data_zip/poh_vr_1k/keypoints.json'):
     mph_input_list = []
     for k,v in data.items():
         dataset_name = v['set']
-        print('!!! use all tr va te')
-        # if dataset_name != 'te': continue
+        # print('!!! use all tr va te')
+        if dataset_name != 'te': continue
         img_name = v['img_path'].split('/')[-1]
         gt = int(v['gt']) 
         gt = custom_gt_for_vr_poh_1k(gt)

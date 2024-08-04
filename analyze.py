@@ -73,9 +73,9 @@ def show(plt, x):
     gt = x.gt
     pred = x.pred_tfs
     # plot(gtk, 'g')
-    plot(plt,mpk, 'b')
-    plot_pointing(plt,pmpk)
-    plot_gt_pred(plt,x)
+    # plot(plt,mpk, 'b')
+    # plot_pointing(plt,pmpk)
+    # plot_gt_pred(plt,x)
 
 
     plt.axis(zoom(x))
@@ -298,21 +298,24 @@ class MyO:
     n_hand: int
     palm_overlap: int
     is_correct: int
+    index_finger_diff: float
     
     def to_json(self):
         return {
             "n_hand": self.n_hand,
             "palm_overlap": self.palm_overlap,
             "is_correct": self.is_correct,
+            "index_finger_diff": self.index_finger_diff,
         }
+
 def write_overlap_n_hand_json(o):
     X = []
     for p in o.pack:
-        x = MyO(p.n_hand, p.percent_palm_overlap, p.is_correct)
+        x = MyO(p.n_hand, p.percent_palm_overlap, p.is_correct, p.pointing_finger_diff)
         X.append(x)
     
     js = [x.to_json() for x in X]
-    with open('overlap_n_hand.json', 'w') as f:
+    with open('overlap_n_hand2.json', 'w') as f:
         json.dump(js, f)
     
 def plot_palm_ov_one_two(o):
@@ -454,10 +457,8 @@ def save_img_zero_hand(o):
         # print(dst)
         out = os.path.join('zero_hand_images', name)
         print(f'![alt]({out})')
-
-    
 def main(o):
-    plot_two_hands_not_correct(o)
+    # plot_two_hands_not_correct(o)
     # plot_two_hands_box(o)
     # print_causes_fail(o)
     # plot_causes_fail()
@@ -481,7 +482,7 @@ def main(o):
     # x = o.two[0]
     # get_n(o)
     # check_mph_keypoint(x)
-    # write_overlap_n_hand_json(o)
+    write_overlap_n_hand_json(o)
     # save_img_zero_hand(o)
     pass
 

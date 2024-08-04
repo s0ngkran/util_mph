@@ -3,12 +3,11 @@ import numpy as np
 
 def angle_between_vectors(vector1, vector2):
     dot_product = sum(v1 * v2 for v1, v2 in zip(vector1, vector2))
-    
+
     magnitude1 = math.sqrt(sum(v ** 2 for v in vector1))
-    magnitude2 = math.sqrt(sum(v ** 2 for v in vector2))
-    
+    magnitude2 = math.sqrt(sum(v**2 for v in vector2))
     cos_angle = dot_product / (magnitude1 * magnitude2)
-    
+
     angle_rad = math.acos(cos_angle)
     angle_deg = math.degrees(angle_rad)
     
